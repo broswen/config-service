@@ -1,0 +1,47 @@
+service: config-service
+
+frameworkVersion: "2 || 3"
+
+plugins:
+  - serverless-plugin-typescript
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  memorySize: 128
+  timeout: 3
+  lambdaHashingVersion: 20201221
+
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+          Resource: !GetAtt ConfigTable.Arn
+
+  environment:
+    CONFIGTABLE: !Ref ConfigTable
+
+functions:
+  hello:
+    handler: src/lambdas/hello.handler
+
+resources:
+  Resources:
+    ConfigTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK
+            KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE
